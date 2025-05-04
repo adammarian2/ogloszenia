@@ -56,12 +56,25 @@ def index():
     otodom_counts = [row[2] for row in rows]
     total_counts = [olx + oto for olx, oto in zip(olx_counts, otodom_counts)]
 
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=dates, y=total_counts, fill='tozeroy', mode='lines', name='Suma OLX+Otodom'))
-    fig.update_layout(title=f"Ogłoszenia OLX + Otodom - {selected_city}", xaxis_title="Data", yaxis_title="Liczba ogłoszeń", yaxis_type='log')
+    # OLX wykres
+    fig_olx = go.Figure()
+    fig_olx.add_trace(go.Scatter(x=dates, y=olx_counts, mode='lines', name='OLX', line=dict(color='green')))
+    fig_olx.update_layout(title=f"Ogłoszenia OLX – {selected_city}", xaxis_title="Data", yaxis_title="Liczba", xaxis=dict(showgrid=False), yaxis=dict(showgrid=False))
+    plot_olx = plot(fig_olx, output_type='div')
 
-    plot_div = plot(fig, output_type='div')
-    return render_template("index.html", plot_div=plot_div, cities=CITIES, selected_city=selected_city)
+    # Otodom wykres
+    fig_oto = go.Figure()
+    fig_oto.add_trace(go.Scatter(x=dates, y=otodom_counts, mode='lines', name='Otodom', line=dict(color='blue')))
+    fig_oto.update_layout(title=f"Ogłoszenia Otodom – {selected_city}", xaxis_title="Data", yaxis_title="Liczba", xaxis=dict(showgrid=False), yaxis=dict(showgrid=False))
+    plot_oto = plot(fig_oto, output_type='div')
+
+    # SUMA wykres
+    fig_sum = go.Figure()
+    fig_sum.add_trace(go.Scatter(x=dates, y=total_counts, mode='lines', name='Suma OLX+Otodom', line=dict(color='magenta')))
+    fig_sum.update_layout(title=f"Suma ogłoszeń OLX + Otodom – {selected_city}", xaxis_title="Data", yaxis_title="Liczba", xaxis=dict(showgrid=False), yaxis=dict(showgrid=False))
+    plot_sum = plot(fig_sum, output_type='div')
+
+    return render_template("index.html", plot_olx=plot_olx, plot_oto=plot_oto, plot_sum=plot_sum, cities=CITIES, selected_city=selected_city)
 
 if __name__ == "__main__":
     scheduler = BackgroundScheduler()
