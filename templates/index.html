@@ -1,10 +1,19 @@
+
 <!DOCTYPE html>
 <html>
 <head>
     <title>Wykres ogłoszeń</title>
 </head>
 <body>
-    <h1>Wykres ogłoszeń OLX + Otodom (cała Polska)</h1>
+    <h1>Wykres ogłoszeń OLX + Otodom</h1>
+    <form method="get">
+        <label for="city">Wybierz miasto:</label>
+        <select name="city" id="city" onchange="this.form.submit()">
+            {% for city in cities %}
+                <option value="{{ city }}" {% if city == selected_city %}selected{% endif %}>{{ city }}</option>
+            {% endfor %}
+        </select>
+    </form>
     {{ plot_div | safe }}
 </body>
 </html>
