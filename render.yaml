@@ -1,0 +1,17 @@
+
+services:
+  - type: web
+    name: ogloszenia-web
+    env: python
+    buildCommand: ""
+    startCommand: "python app.py"
+    plan: free
+    autoDeploy: true
+
+  - type: worker
+    name: ogloszenia-scraper
+    env: python
+    buildCommand: ""
+    startCommand: "python scrape.py"
+    plan: free
+    schedule: "@daily"
