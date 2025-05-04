@@ -1,5 +1,5 @@
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 import sqlite3
 import plotly.graph_objs as go
 from plotly.offline import plot
@@ -8,15 +8,17 @@ from datetime import datetime, date
 import random
 
 app = Flask(__name__)
-
 DB_PATH = "data.db"
+
+CITIES = [
+    "Wszystkie miasta",
+    "Warszawa", "Kraków", "Gdańsk", "Poznań", "Wrocław",
+    "Łódź", "Katowice", "Lublin", "Sopot", "Zakopane"
+]
 
 def scrape_data():
     print(f"Scraping triggered at {datetime.now()}")
-    cities = [
-        "Warszawa", "Kraków", "Gdańsk", "Poznań", "Wrocław",
-        "Łódź", "Katowice", "Lublin", "Sopot", "Zakopane"
-    ]
+    cities = CITIES[1:]
 
     def fetch_listings(city):
         return random.randint(500, 1500), random.randint(700, 1700)
@@ -33,30 +35,33 @@ def scrape_data():
             c.execute("INSERT INTO listings (date, city, olx_count, otodom_count) VALUES (?, ?, ?, ?)",
                       (today, city, olx, otodom))
         conn.commit()
-        print("Data scraped and saved.")
-    else:
-        print("Data for today already exists. Skipping.")
     conn.close()
 
-@app.route("/")
+@app.route("/", methods=["GET"])
 def index():
+    selected_city = request.args.get("city", "Wszystkie miasta")
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT date, city, SUM(olx_count), SUM(otodom_count) FROM listings GROUP BY date ORDER BY date")
+
+    if selected_city == "Wszystkie miasta":
+        c.execute("SELECT date, SUM(olx_count), SUM(otodom_count) FROM listings GROUP BY date ORDER BY date")
+    else:
+        c.execute("SELECT date, SUM(olx_count), SUM(otodom_count) FROM listings WHERE city = ? GROUP BY date ORDER BY date", (selected_city,))
+    
     rows = c.fetchall()
     conn.close()
 
     dates = [row[0] for row in rows]
-    olx_counts = [row[2] for row in rows]
-    otodom_counts = [row[3] for row in rows]
+    olx_counts = [row[1] for row in rows]
+    otodom_counts = [row[2] for row in rows]
     total_counts = [olx + oto for olx, oto in zip(olx_counts, otodom_counts)]
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=dates, y=total_counts, fill='tozeroy', mode='lines', name='Suma OLX+Otodom'))
-    fig.update_layout(title="Suma ogłoszeń OLX + Otodom", xaxis_title="Data", yaxis_title="Liczba ogłoszeń", yaxis_type='log')
+    fig.update_layout(title=f"Ogłoszenia OLX + Otodom - {selected_city}", xaxis_title="Data", yaxis_title="Liczba ogłoszeń", yaxis_type='log')
 
     plot_div = plot(fig, output_type='div')
-    return render_template("index.html", plot_div=plot_div)
+    return render_template("index.html", plot_div=plot_div, cities=CITIES, selected_city=selected_city)
 
 if __name__ == "__main__":
     scheduler = BackgroundScheduler()
