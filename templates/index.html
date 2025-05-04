@@ -2,10 +2,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Wykres ogłoszeń</title>
+    <title>Wykresy ogłoszeń</title>
 </head>
 <body>
-    <h1>Wykres ogłoszeń OLX + Otodom</h1>
+    <h1>Ogłoszenia OLX i Otodom</h1>
     <form method="get">
         <label for="city">Wybierz miasto:</label>
         <select name="city" id="city" onchange="this.form.submit()">
@@ -14,7 +14,13 @@
             {% endfor %}
         </select>
     </form>
-    {{ plot_div | safe }}
+
+    <hr>
+    {{ plot_olx | safe }}
+    <hr>
+    {{ plot_oto | safe }}
+    <hr>
+    {{ plot_sum | safe }}
 </body>
 </html>
 
