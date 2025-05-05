@@ -35,7 +35,15 @@ def scrape_data():
             c.execute("INSERT INTO listings (date, city, olx_count, otodom_count) VALUES (?, ?, ?, ?)",
                       (today, city, olx, otodom))
         conn.commit()
+        print("Dane zapisane.")
+    else:
+        print("Dane na dziś już istnieją.")
     conn.close()
+
+@app.route("/force-scrape")
+def force_scrape():
+    scrape_data()
+    return "Scraping completed (ręcznie). Możesz wrócić na <a href='/'>stronę główną</a>."
 
 @app.route("/", methods=["GET"])
 def index():
@@ -56,19 +64,16 @@ def index():
     otodom_counts = [row[2] for row in rows]
     total_counts = [olx + oto for olx, oto in zip(olx_counts, otodom_counts)]
 
-    # OLX wykres
     fig_olx = go.Figure()
     fig_olx.add_trace(go.Scatter(x=dates, y=olx_counts, mode='lines', name='OLX', line=dict(color='green')))
     fig_olx.update_layout(title=f"Ogłoszenia OLX – {selected_city}", xaxis_title="Data", yaxis_title="Liczba", xaxis=dict(showgrid=False), yaxis=dict(showgrid=False))
     plot_olx = plot(fig_olx, output_type='div')
 
-    # Otodom wykres
     fig_oto = go.Figure()
     fig_oto.add_trace(go.Scatter(x=dates, y=otodom_counts, mode='lines', name='Otodom', line=dict(color='blue')))
     fig_oto.update_layout(title=f"Ogłoszenia Otodom – {selected_city}", xaxis_title="Data", yaxis_title="Liczba", xaxis=dict(showgrid=False), yaxis=dict(showgrid=False))
     plot_oto = plot(fig_oto, output_type='div')
 
-    # SUMA wykres
     fig_sum = go.Figure()
     fig_sum.add_trace(go.Scatter(x=dates, y=total_counts, mode='lines', name='Suma OLX+Otodom', line=dict(color='magenta')))
     fig_sum.update_layout(title=f"Suma ogłoszeń OLX + Otodom – {selected_city}", xaxis_title="Data", yaxis_title="Liczba", xaxis=dict(showgrid=False), yaxis=dict(showgrid=False))
