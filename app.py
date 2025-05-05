@@ -65,17 +65,17 @@ def index():
     total_counts = [olx + oto for olx, oto in zip(olx_counts, otodom_counts)]
 
     fig_olx = go.Figure()
-    fig_olx.add_trace(go.Scatter(x=dates, y=olx_counts, mode='lines', name='OLX', line=dict(color='green')))
+    fig_olx.add_trace(go.Scatter(x=dates, y=olx_counts, mode='lines+markers', name='OLX', line=dict(color='green')))
     fig_olx.update_layout(title=f"Ogłoszenia OLX – {selected_city}", xaxis_title="Data", yaxis_title="Liczba", xaxis=dict(showgrid=False), yaxis=dict(showgrid=False))
     plot_olx = plot(fig_olx, output_type='div')
 
     fig_oto = go.Figure()
-    fig_oto.add_trace(go.Scatter(x=dates, y=otodom_counts, mode='lines', name='Otodom', line=dict(color='blue')))
+    fig_oto.add_trace(go.Scatter(x=dates, y=otodom_counts, mode='lines+markers', name='Otodom', line=dict(color='blue')))
     fig_oto.update_layout(title=f"Ogłoszenia Otodom – {selected_city}", xaxis_title="Data", yaxis_title="Liczba", xaxis=dict(showgrid=False), yaxis=dict(showgrid=False))
     plot_oto = plot(fig_oto, output_type='div')
 
     fig_sum = go.Figure()
-    fig_sum.add_trace(go.Scatter(x=dates, y=total_counts, mode='lines', name='Suma OLX+Otodom', line=dict(color='magenta')))
+    fig_sum.add_trace(go.Scatter(x=dates, y=total_counts, mode='lines+markers', name='Suma OLX+Otodom', line=dict(color='magenta')))
     fig_sum.update_layout(title=f"Suma ogłoszeń OLX + Otodom – {selected_city}", xaxis_title="Data", yaxis_title="Liczba", xaxis=dict(showgrid=False), yaxis=dict(showgrid=False))
     plot_sum = plot(fig_sum, output_type='div')
 
