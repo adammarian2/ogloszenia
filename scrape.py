@@ -1,26 +1,19 @@
+import csv
+import os
+from datetime import datetime
 
-import sqlite3
-from datetime import date
-import random
+# <<< Tu wstaw swój prawdziwy kod zliczający ogłoszenia >>>
+olx_count = 123  # przykładowa liczba
+otodom_count = 456  # przykładowa liczba
 
-cities = [
-    "Warszawa", "Kraków", "Gdańsk", "Poznań", "Wrocław",
-    "Łódź", "Katowice", "Lublin", "Sopot", "Zakopane"
-]
+def save_data(olx, otodom):
+    today = datetime.now().strftime("%Y-%m-%d")
+    file_exists = os.path.exists("data.csv")
 
-def fetch_listings(city):
-    return random.randint(500, 1500), random.randint(700, 1700)
+    with open("data.csv", "a", newline="") as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            writer.writerow(["date", "olx", "otodom"])
+        writer.writerow([today, olx, otodom])
 
-conn = sqlite3.connect("data.db")
-c = conn.cursor()
-c.execute("CREATE TABLE IF NOT EXISTS listings (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, city TEXT, olx_count INTEGER, otodom_count INTEGER)")
-
-today = date.today().isoformat()
-
-for city in cities:
-    olx, otodom = fetch_listings(city)
-    c.execute("INSERT INTO listings (date, city, olx_count, otodom_count) VALUES (?, ?, ?, ?)",
-              (today, city, olx, otodom))
-
-conn.commit()
-conn.close()
+save_data(olx_count, otodom_count)
