@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, send_file
+from apscheduler.schedulers.background import BackgroundScheduler
 import pandas as pd
 import os
+import scrape  # zakładamy, że masz scrape.py w tym samym katalogu
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -40,3 +43,25 @@ def index():
 @app.route("/export")
 def export():
     return send_file("data.csv", as_attachment=True)
+
+@app.route("/force-scrape")
+def force_scrape():
+    try:
+        scrape.save_data()
+        return "Scrape done!"
+    except Exception as e:
+        return f"Błąd scrape: {e}"
+
+# Harmonogram codzienny o 6:00
+scheduler = BackgroundScheduler()
+scheduler.add_job(scrape.save_data, "cron", hour=6, minute=0)
+scheduler.start()
+
+# Pierwsze uruchomienie od razu
+try:
+    scrape.save_data()
+except Exception as e:
+    print(f"Błąd podczas startowego scrape: {e}")
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
