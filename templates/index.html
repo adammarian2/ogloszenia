@@ -17,40 +17,66 @@
         </select>
     </form>
 
-    <canvas id="myChart" height="100"></canvas>
+    <h2>Wykres OLX</h2>
+    <canvas id="olxChart" height="100"></canvas>
+
+    <h2>Wykres Otodom</h2>
+    <canvas id="otodomChart" height="100"></canvas>
+
+    <h2>Suma OLX + Otodom</h2>
+    <canvas id="sumChart" height="100"></canvas>
+
     <script>
-        const ctx = document.getElementById('myChart').getContext('2d');
-        const chart = new Chart(ctx, {
+        const labels = {{ dates|tojson }};
+        const olxData = {{ olx_counts|tojson }};
+        const otodomData = {{ otodom_counts|tojson }};
+        const totalData = {{ total_counts|tojson }};
+
+        new Chart(document.getElementById('olxChart').getContext('2d'), {
             type: 'line',
             data: {
-                labels: {{ dates|tojson }},
-                datasets: [
-                    {
-                        label: 'OLX',
-                        data: {{ olx_counts|tojson }},
-                        borderColor: 'green',
-                        fill: false
-                    },
-                    {
-                        label: 'Otodom',
-                        data: {{ otodom_counts|tojson }},
-                        borderColor: 'blue',
-                        fill: false
-                    },
-                    {
-                        label: 'Suma',
-                        data: {{ total_counts|tojson }},
-                        borderColor: 'magenta',
-                        fill: false
-                    }
-                ]
+                labels: labels,
+                datasets: [{
+                    label: 'OLX',
+                    data: olxData,
+                    borderColor: 'green',
+                    fill: false
+                }]
             },
             options: {
-                scales: {
-                    y: {
-                        grid: { display: false }
-                    }
-                }
+                scales: { y: { grid: { display: false } } }
+            }
+        });
+
+        new Chart(document.getElementById('otodomChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Otodom',
+                    data: otodomData,
+                    borderColor: 'blue',
+                    fill: false
+                }]
+            },
+            options: {
+                scales: { y: { grid: { display: false } } }
+            }
+        });
+
+        new Chart(document.getElementById('sumChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Suma',
+                    data: totalData,
+                    borderColor: 'magenta',
+                    fill: false
+                }]
+            },
+            options: {
+                scales: { y: { grid: { display: false } } }
             }
         });
     </script>
