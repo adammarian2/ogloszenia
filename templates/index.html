@@ -1,12 +1,14 @@
-
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Wykresy ogłoszeń</title>
+    <meta charset="UTF-8">
+    <title>Wykres ogłoszeń</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <h1>Ogłoszenia OLX i Otodom</h1>
-    <form method="get">
+
+    <form method="get" action="/">
         <label for="city">Wybierz miasto:</label>
         <select name="city" id="city" onchange="this.form.submit()">
             {% for city in cities %}
@@ -15,12 +17,42 @@
         </select>
     </form>
 
-    <hr>
-    {{ plot_olx | safe }}
-    <hr>
-    {{ plot_oto | safe }}
-    <hr>
-    {{ plot_sum | safe }}
+    <canvas id="myChart" height="100"></canvas>
+    <script>
+        const ctx = document.getElementById('myChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ dates|tojson }},
+                datasets: [
+                    {
+                        label: 'OLX',
+                        data: {{ olx_counts|tojson }},
+                        borderColor: 'green',
+                        fill: false
+                    },
+                    {
+                        label: 'Otodom',
+                        data: {{ otodom_counts|tojson }},
+                        borderColor: 'blue',
+                        fill: false
+                    },
+                    {
+                        label: 'Suma',
+                        data: {{ total_counts|tojson }},
+                        borderColor: 'magenta',
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    y: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>
-
