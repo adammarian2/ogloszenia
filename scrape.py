@@ -6,6 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 
 CITIES = [
+    "Cała Polska",
     "Warszawa", "Kraków", "Gdańsk", "Poznań", "Wrocław",
     "Łódź", "Katowice", "Lublin", "Sopot", "Zakopane"
 ]
@@ -15,15 +16,15 @@ HEADERS = {
 }
 
 def fetch_listings(city):
-    # FAKE dane (Twoja wersja)
+    # Losowe dane tylko dla miast, nie dla "Cała Polska"
     return random.randint(500, 1500), random.randint(700, 1700)
 
-def fetch_all_poland():
+def fetch_all_poland_real():
     # Prawdziwe dane OLX + Otodom dla całej Polski
     olx_url = "https://www.olx.pl/nieruchomosci/mieszkania/sprzedaz/"
     otodom_url = "https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie"
 
-    def extract_number(url, selector, attribute="text"):
+    def extract_number(url, selector):
         try:
             response = requests.get(url, headers=HEADERS, timeout=10)
             soup = BeautifulSoup(response.text, "html.parser")
@@ -32,7 +33,8 @@ def fetch_all_poland():
                 text = element.get_text(strip=True)
                 digits = ''.join(filter(str.isdigit, text))
                 return int(digits) if digits else 0
-        except:
+        except Exception as e:
+            print(f"Błąd przy pobieraniu {url}: {e}")
             return 0
         return 0
 
@@ -49,7 +51,7 @@ def save_data():
     if os.path.exists(filepath):
         with open(filepath, "r") as f:
             for line in f:
-                if today in line and "ALL" in line:
+                if today in line and "Cała Polska" in line:
                     zapisane = True
                     break
 
@@ -59,16 +61,18 @@ def save_data():
             if need_header:
                 writer.writerow(["date", "city", "olx", "otodom"])
 
-            # 🔹 Wpis ogólnopolski (ALL)
-            olx_all, otodom_all = fetch_all_poland()
-            writer.writerow([today, "ALL", olx_all, otodom_all])
-            print(f"Zapisano dane dla ALL: OLX={olx_all}, Otodom={otodom_all}")
+            # 🔹 Prawdziwe dane ogólnopolskie
+            olx_all, otodom_all = fetch_all_poland_real()
+            writer.writerow([today, "Cała Polska", olx_all, otodom_all])
+            print(f"Zapisano Cała Polska: OLX={olx_all}, Otodom={otodom_all}")
 
-            # 🔹 Dane per miasto (Twoja dotychczasowa logika)
+            # 🔹 Losowe dane dla miast
             for city in CITIES:
+                if city == "Cała Polska":
+                    continue  # już dodane
                 olx, otodom = fetch_listings(city)
                 writer.writerow([today, city, olx, otodom])
-                print(f"Zapisano dane dla {city}: OLX={olx}, Otodom={otodom}")
+                print(f"Zapisano {city}: OLX={olx}, Otodom={otodom}")
     else:
         print("Dane na dziś już istnieją.")
 
