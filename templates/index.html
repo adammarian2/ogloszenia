@@ -23,9 +23,9 @@
         </select>
     </form>
 
-    {% if selected_city == "Wszystkie miasta" %}
+    {% if selected_city == "Cała Polska" %}
     <div id="stats">
-        <h3>📊 Statystyki – Wszystkie miasta</h3>
+        <h3>📊 Statystyki – Cała Polska</h3>
         <p><strong>ATH:</strong> {{ stats["ath"] or "brak danych" }}</p>
         <p><strong>Zmiana 1D:</strong> {{ stats["d1"] or "brak danych" }}</p>
         <p><strong>Zmiana 1W:</strong> {{ stats["w1"] or "brak danych" }}</p>
@@ -48,6 +48,7 @@
         const olxData = {{ olx_counts|tojson }};
         const otodomData = {{ otodom_counts|tojson }};
         const totalData = {{ total_counts|tojson }};
+        const isAll = "{{ selected_city }}" === "Cała Polska";
 
         const olxCtx = document.getElementById('olxChart').getContext('2d');
         const otodomCtx = document.getElementById('otodomChart').getContext('2d');
