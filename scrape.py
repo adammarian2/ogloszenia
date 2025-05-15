@@ -16,31 +16,27 @@ HEADERS = {
 }
 
 def fetch_listings(city):
-    # Losowe dane tylko dla miast
     return random.randint(500, 1500), random.randint(700, 1700)
 
+def extract_otodom_number():
+    url = "https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie"
+    try:
+        response = requests.get(url, headers=HEADERS, timeout=10)
+        soup = BeautifulSoup(response.text, "html.parser")
+        meta = soup.find("meta", attrs={"name": "description"})
+        if meta and "ogłoszeń" in meta["content"]:
+            text = meta["content"]
+            digits = ''.join(filter(str.isdigit, text))
+            return int(digits) if digits else 0
+        else:
+            print("[Otodom] Nie znaleziono meta tagu lub liczby.")
+    except Exception as e:
+        print(f"[Otodom] Błąd: {e}")
+    return 0
+
 def fetch_all_poland_real():
-    olx_url = "https://www.olx.pl/nieruchomosci/mieszkania/sprzedaz/"
-    otodom_url = "https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie"
-
-    def extract_number(url, selector, fallback_label):
-        try:
-            response = requests.get(url, headers=HEADERS, timeout=10)
-            soup = BeautifulSoup(response.text, "html.parser")
-            element = soup.select_one(selector)
-            if element:
-                text = element.get_text(strip=True)
-                digits = ''.join(filter(str.isdigit, text))
-                return int(digits) if digits else 0
-            else:
-                print(f"[{fallback_label}] Element nie znaleziony w HTML")
-        except Exception as e:
-            print(f"[{fallback_label}] Błąd pobierania: {e}")
-        return 0
-
-    olx_total = extract_number(olx_url, "h6", "OLX")
-    otodom_total = extract_number(otodom_url, "div.css-1vr17z4 > span", "Otodom")
-
+    otodom_total = extract_otodom_number()
+    olx_total = 0  # Placeholder – OLX może być dodany później
     print(f"[DEBUG] OLX total: {olx_total}, Otodom total: {otodom_total}")
     return olx_total, otodom_total
 
@@ -63,12 +59,10 @@ def save_data():
             if need_header:
                 writer.writerow(["date", "city", "olx", "otodom"])
 
-            # 🔹 Rzeczywiste dane z całej Polski
             olx_all, otodom_all = fetch_all_poland_real()
             writer.writerow([today, "Cała Polska", olx_all, otodom_all])
             print(f"Zapisano Cała Polska: OLX={olx_all}, Otodom={otodom_all}")
 
-            # 🔹 Losowe dane dla miast
             for city in CITIES:
                 if city == "Cała Polska":
                     continue
