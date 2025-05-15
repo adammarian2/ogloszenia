@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <title>Wykres ogłoszeń</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        canvas { max-width: 100%; margin-bottom: 30px; }
+        #stats { margin-top: 20px; padding: 15px; background: #f8f8f8; border-radius: 10px; }
+        #stats h3 { margin-top: 0; }
+    </style>
 </head>
 <body>
     <h1>Ogłoszenia OLX i Otodom</h1>
@@ -16,6 +22,17 @@
             {% endfor %}
         </select>
     </form>
+
+    {% if selected_city == "Wszystkie miasta" %}
+    <div id="stats">
+        <h3>📊 Statystyki – Wszystkie miasta</h3>
+        <p><strong>ATH:</strong> {{ stats["ath"] or "brak danych" }}</p>
+        <p><strong>Zmiana 1D:</strong> {{ stats["d1"] or "brak danych" }}</p>
+        <p><strong>Zmiana 1W:</strong> {{ stats["w1"] or "brak danych" }}</p>
+        <p><strong>Zmiana 1M:</strong> {{ stats["m1"] or "brak danych" }}</p>
+        <p><strong>Zmiana 1R:</strong> {{ stats["y1"] or "brak danych" }}</p>
+    </div>
+    {% endif %}
 
     <h2>Wykres OLX</h2>
     <canvas id="olxChart" height="100"></canvas>
@@ -32,7 +49,23 @@
         const otodomData = {{ otodom_counts|tojson }};
         const totalData = {{ total_counts|tojson }};
 
-        new Chart(document.getElementById('olxChart').getContext('2d'), {
+        const olxCtx = document.getElementById('olxChart').getContext('2d');
+        const otodomCtx = document.getElementById('otodomChart').getContext('2d');
+        const sumCtx = document.getElementById('sumChart').getContext('2d');
+
+        const olxGradient = olxCtx.createLinearGradient(0, 0, 0, 400);
+        olxGradient.addColorStop(0, 'rgba(0, 128, 0, 0.3)');
+        olxGradient.addColorStop(1, 'rgba(0, 128, 0, 0)');
+
+        const otodomGradient = otodomCtx.createLinearGradient(0, 0, 0, 400);
+        otodomGradient.addColorStop(0, 'rgba(0, 0, 255, 0.3)');
+        otodomGradient.addColorStop(1, 'rgba(0, 0, 255, 0)');
+
+        const sumGradient = sumCtx.createLinearGradient(0, 0, 0, 400);
+        sumGradient.addColorStop(0, 'rgba(153, 102, 255, 0.3)');
+        sumGradient.addColorStop(1, 'rgba(153, 102, 255, 0)');
+
+        new Chart(olxCtx, {
             type: 'line',
             data: {
                 labels: labels,
@@ -40,7 +73,9 @@
                     label: 'OLX',
                     data: olxData,
                     borderColor: 'green',
-                    fill: false
+                    backgroundColor: olxGradient,
+                    fill: true,
+                    tension: 0.3
                 }]
             },
             options: {
@@ -48,7 +83,7 @@
             }
         });
 
-        new Chart(document.getElementById('otodomChart').getContext('2d'), {
+        new Chart(otodomCtx, {
             type: 'line',
             data: {
                 labels: labels,
@@ -56,7 +91,9 @@
                     label: 'Otodom',
                     data: otodomData,
                     borderColor: 'blue',
-                    fill: false
+                    backgroundColor: otodomGradient,
+                    fill: true,
+                    tension: 0.3
                 }]
             },
             options: {
@@ -64,7 +101,7 @@
             }
         });
 
-        new Chart(document.getElementById('sumChart').getContext('2d'), {
+        new Chart(sumCtx, {
             type: 'line',
             data: {
                 labels: labels,
@@ -72,7 +109,9 @@
                     label: 'Suma',
                     data: totalData,
                     borderColor: 'magenta',
-                    fill: false
+                    backgroundColor: sumGradient,
+                    fill: true,
+                    tension: 0.3
                 }]
             },
             options: {
