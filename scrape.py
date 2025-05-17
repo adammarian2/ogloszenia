@@ -4,73 +4,98 @@ from datetime import datetime
 import random
 import requests
 from bs4 import BeautifulSoup
+import logging
+
+# Konfiguracja logowania
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 CITIES = [
-    "Cała Polska",
-    "Warszawa", "Kraków", "Gdańsk", "Poznań", "Wrocław",
+    "Cała Polska", "Warszawa", "Kraków", "Gdańsk", "Poznań", "Wrocław",
     "Łódź", "Katowice", "Lublin", "Sopot", "Zakopane"
 ]
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
 }
 
 def fetch_listings(city):
+    # Placeholder – używa losowych danych
+    logger.warning(f"Fetch_listings dla {city} używa losowych danych")
     return random.randint(500, 1500), random.randint(700, 1700)
 
 def extract_otodom_number():
     url = "https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie"
     try:
         response = requests.get(url, headers=HEADERS, timeout=10)
+        response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
         meta = soup.find("meta", attrs={"name": "description"})
         if meta and "ogłoszeń" in meta["content"]:
             text = meta["content"]
             digits = ''.join(filter(str.isdigit, text))
-            return int(digits) if digits else 0
-        else:
-            print("[Otodom] Nie znaleziono meta tagu lub liczby.")
+            number = int(digits) if digits else 0
+            logger.info(f"Otodom: Znaleziono {number} ogłoszeń")
+            return number
+        logger.error("Otodom: Nie znaleziono meta tagu lub liczby")
+        return 0
     except Exception as e:
-        print(f"[Otodom] Błąd: {e}")
-    return 0
+        logger.error(f"Otodom: Błąd: {e}")
+        return 0
 
 def fetch_all_poland_real():
     otodom_total = extract_otodom_number()
-    olx_total = 0  # Placeholder – OLX może być dodany później
-    print(f"[DEBUG] OLX total: {olx_total}, Otodom total: {otodom_total}")
+    olx_total = 0  # Placeholder – dodaj scrapowanie OLX, jeśli dostępne
+    logger.info(f"Cała Polska: OLX={olx_total}, Otodom={otodom_total}")
     return olx_total, otodom_total
 
 def save_data():
     today = datetime.now().strftime("%Y-%m-%d")
     filepath = "data.csv"
     need_header = not os.path.exists(filepath) or os.path.getsize(filepath) == 0
-    zapisane = False
 
+    # Sprawdź istniejące wpisy
+    existing_dates = set()
     if os.path.exists(filepath):
-        with open(filepath, "r") as f:
-            for line in f:
-                if today in line and "Cała Polska" in line:
-                    zapisane = True
-                    break
+        try:
+            with open(filepath, "r", encoding='utf-8') as f:
+                reader = csv.reader(f)
+                next(reader, None)  # Pomiń nagłówek
+                for row in reader:
+                    if len(row) >= 2:
+                        existing_dates.add((row[0], row[1]))
+        except Exception as e:
+            logger.error(f"Błąd wczytywania {filepath}: {e}")
 
-    if not zapisane:
-        with open(filepath, "a", newline="") as f:
-            writer = csv.writer(f)
-            if need_header:
-                writer.writerow(["date", "city", "olx", "otodom"])
-
-            olx_all, otodom_all = fetch_all_poland_real()
-            writer.writerow([today, "Cała Polska", olx_all, otodom_all])
-            print(f"Zapisano Cała Polska: OLX={olx_all}, Otodom={otodom_all}")
-
-            for city in CITIES:
+    # Zbierz nowe dane
+    new_data = []
+    for city in CITIES:
+        if (today, city) not in existing_dates:
+            try:
                 if city == "Cała Polska":
-                    continue
-                olx, otodom = fetch_listings(city)
-                writer.writerow([today, city, olx, otodom])
-                print(f"Zapisano {city}: OLX={olx}, Otodom={otodom}")
+                    olx, otodom = fetch_all_poland_real()
+                else:
+                    olx, otodom = fetch_listings(city)
+                new_data.append([today, city, olx, otodom])
+                logger.info(f"Zebrano dane dla {city}: OLX={olx}, Otodom={otodom}")
+            except Exception as e:
+                logger.error(f"Błąd scrapowania dla {city}: {e}")
+                continue
+
+    # Zapisz dane
+    if new_data:
+        try:
+            with open(filepath, "a", newline="", encoding='utf-8') as f:
+                writer = csv.writer(f)
+                if need_header:
+                    writer.writerow(["date", "city", "olx", "otodom"])
+                    logger.info("Zapisano nagłówek CSV")
+                writer.writerows(new_data)
+                logger.info(f"Zapisano {len(new_data)} wierszy do {filepath}")
+        except Exception as e:
+            logger.error(f"Błąd zapisu do {filepath}: {e}")
     else:
-        print("Dane na dziś już istnieją.")
+        logger.info(f"Brak nowych danych dla {today}")
 
 if __name__ == "__main__":
     save_data()
