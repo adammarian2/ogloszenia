@@ -53,7 +53,7 @@ def fetch_all_poland_real():
 
 def save_data():
     today = datetime.now().strftime("%Y-%m-%d")
-    filepath = "/app/data.csv"  # Ścieżka zgodna z dyskiem Rendera
+    filepath = "/tmp/data.csv"
     logger.info(f"Rozpoczęcie zapisu danych dla {today} do {filepath}")
 
     # Sprawdź uprawnienia zapisu
@@ -83,8 +83,8 @@ def save_data():
     new_data = []
     for city in CITIES:
         if (today, city) not in existing_dates:
+            logger.info(f"Pobieranie danych dla {city}")
             try:
-                logger.info(f"Pobieranie danych dla {city}")
                 if city == "Cała Polska":
                     olx, otodom = fetch_all_poland_real()
                 else:
