@@ -43,16 +43,16 @@ def calculate_stats(df):
 @app.route("/")
 def index():
     selected_city = request.args.get("city", "Cała Polska")
-    if not os.path.exists("data.csv"):
-        logger.error("Plik data.csv nie istnieje")
+    if not os.path.exists("/tmp/data.csv"):
+        logger.error("Plik /tmp/data.csv nie istnieje")
         return "Brak danych"
 
     # Wczytaj dane
     try:
-        data = pd.read_csv("data.csv")
-        logger.info(f"Wczytano {len(data)} wierszy z data.csv, daty: {data['date'].unique()}")
+        data = pd.read_csv("/tmp/data.csv")
+        logger.info(f"Wczytano {len(data)} wierszy z /tmp/data.csv, daty: {data['date'].unique()}")
     except Exception as e:
-        logger.error(f"Błąd wczytywania data.csv: {e}")
+        logger.error(f"Błąd wczytywania /tmp/data.csv: {e}")
         return "Błąd danych"
 
     stats = None
@@ -110,8 +110,8 @@ def index():
 
 @app.route("/export")
 def export():
-    logger.info("Eksportowanie data.csv")
-    return send_file("data.csv", as_attachment=True)
+    logger.info("Eksportowanie /tmp/data.csv")
+    return send_file("/tmp/data.csv", as_attachment=True)
 
 @app.route("/force-scrape")
 def force_scrape():
