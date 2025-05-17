@@ -1,7 +1,6 @@
 import csv
 import os
 from datetime import datetime
-import random
 import requests
 from bs4 import BeautifulSoup
 
@@ -11,52 +10,74 @@ CITIES = [
     "Łódź", "Katowice", "Lublin", "Sopot", "Zakopane"
 ]
 
+CITY_SLUGS = {
+    "Warszawa": "warszawa",
+    "Kraków": "krakow",
+    "Gdańsk": "gdansk",
+    "Poznań": "poznan",
+    "Wrocław": "wroclaw",
+    "Łódź": "lodz",
+    "Katowice": "katowice",
+    "Lublin": "lublin",
+    "Sopot": "sopot",
+    "Zakopane": "zakopane"
+}
+
 HEADERS = {
     "User-Agent": "Mozilla/5.0"
 }
 
 FILEPATH = "/mnt/data/data.csv"
 
+def get_otodom_count(city_slug=None):
+    if city_slug:
+        url = f"https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie/{city_slug}"
+    else:
+        url = "https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie"
+    try:
+        response = requests.get(url, headers=HEADERS, timeout=10)
+        soup = BeautifulSoup(response.text, "html.parser")
+        meta = soup.find("meta", attrs={"name": "description"})
+        if meta and "ogłoszeń" in meta["content"]:
+            text = meta["content"]
+            digits = ''.join(filter(str.isdigit, text))
+            return int(digits) if digits else 0
+        else:
+            print(f"[Otodom] Meta tag not found for {url}")
+    except Exception as e:
+        print(f"[Otodom] Error for {url}: {e}")
+    return 0
+
+def get_olx_count(city_slug=None):
+    if city_slug:
+        url = f"https://www.olx.pl/nieruchomosci/mieszkania/{city_slug}/"
+    else:
+        url = "https://www.olx.pl/nieruchomosci/mieszkania/"
+    try:
+        response = requests.get(url, headers=HEADERS, timeout=10)
+        soup = BeautifulSoup(response.text, "html.parser")
+        links = soup.find_all("a", href=True)
+        for link in links:
+            if "/nieruchomosci/mieszkania/sprzedaz/" in link["href"] and "Sprzedaż" in link.text:
+                digits = ''.join(filter(str.isdigit, link.text))
+                return int(digits) if digits else 0
+        print(f"[OLX] Link not found for {url}")
+    except Exception as e:
+        print(f"[OLX] Error for {url}: {e}")
+    return 0
+
 def fetch_listings(city):
-    return random.randint(500, 1500), random.randint(700, 1700)
-
-def extract_otodom_number():
-    url = "https://www.otodom.pl/pl/oferty/sprzedaz/mieszkanie"
-    try:
-        response = requests.get(url, headers=HEADERS, timeout=10)
-        soup = BeautifulSoup(response.text, "html.parser")
-        meta = soup.find("meta", attrs={"name": "description"})
-        if meta and "ogłoszeń" in meta["content"]:
-            text = meta["content"]
-            digits = ''.join(filter(str.isdigit, text))
-            return int(digits) if digits else 0
-        else:
-            print("[Otodom] Nie znaleziono meta tagu.")
-    except Exception as e:
-        print(f"[Otodom] Błąd: {e}")
-    return 0
-
-def extract_olx_number():
-    url = "https://www.olx.pl/nieruchomosci/mieszkania/sprzedaz/"
-    try:
-        response = requests.get(url, headers=HEADERS, timeout=10)
-        soup = BeautifulSoup(response.text, "html.parser")
-        meta = soup.find("meta", attrs={"name": "description"})
-        if meta and "ogłoszeń" in meta["content"]:
-            text = meta["content"]
-            digits = ''.join(filter(str.isdigit, text))
-            return int(digits) if digits else 0
-        else:
-            print("[OLX] Nie znaleziono meta tagu.")
-    except Exception as e:
-        print(f"[OLX] Błąd: {e}")
-    return 0
-
-def fetch_all_poland_real():
-    olx_total = extract_olx_number()
-    otodom_total = extract_otodom_number()
-    print(f"[DEBUG] OLX total: {olx_total}, Otodom total: {otodom_total}")
-    return olx_total, otodom_total
+    if city == "Cała Polska":
+        olx = get_olx_count()
+        otodom = get_otodom_count()
+    else:
+        slug = CITY_SLUGS.get(city)
+        if not slug:
+            print(f"[Błąd] Brak slug dla miasta: {city}")
+            return 0, 0
+        olx = get_olx_count(slug)
+        otodom = get_otodom_count(slug)
+    return olx, otodom
 
 def save_data():
     today = datetime.now().strftime("%Y-%m-%d")
@@ -75,16 +96,7 @@ def save_data():
             writer = csv.writer(f)
             if need_header:
                 writer.writerow(["date", "city", "olx", "otodom"])
-
-            # Zapisz dane Cała Polska (z OLX i Otodom)
-            olx_all, otodom_all = fetch_all_poland_real()
-            writer.writerow([today, "Cała Polska", olx_all, otodom_all])
-            print(f"Zapisano Cała Polska: OLX={olx_all}, Otodom={otodom_all}")
-
-            # Losowe dane dla miast
             for city in CITIES:
-                if city == "Cała Polska":
-                    continue
                 olx, otodom = fetch_listings(city)
                 writer.writerow([today, city, olx, otodom])
                 print(f"Zapisano {city}: OLX={olx}, Otodom={otodom}")
