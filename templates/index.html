@@ -23,14 +23,14 @@
         </select>
     </form>
 
-    {% if selected_city == "Cała Polska" %}
+    {% if selected_city == "Cała Polska" and stats %}
     <div id="stats">
         <h3>📊 Statystyki – Cała Polska</h3>
-        <p><strong>ATH:</strong> {{ stats["ath"] or "brak danych" }}</p>
-        <p><strong>Zmiana 1D:</strong> {{ stats["d1"] or "brak danych" }}</p>
-        <p><strong>Zmiana 1W:</strong> {{ stats["w1"] or "brak danych" }}</p>
-        <p><strong>Zmiana 1M:</strong> {{ stats["m1"] or "brak danych" }}</p>
-        <p><strong>Zmiana 1R:</strong> {{ stats["y1"] or "brak danych" }}</p>
+        <p><strong>ATH:</strong> {{ stats.ath|default("brak danych") }}</p>
+        <p><strong>Zmiana 1D:</strong> {{ stats.d1|default("brak danych") }}</p>
+        <p><strong>Zmiana 1W:</strong> {{ stats.w1|default("brak danych") }}</p>
+        <p><strong>Zmiana 1M:</strong> {{ stats.m1|default("brak danych") }}</p>
+        <p><strong>Zmiana 1R:</strong> {{ stats.y1|default("brak danych") }}</p>
     </div>
     {% endif %}
 
@@ -48,7 +48,6 @@
         const olxData = {{ olx_counts|tojson }};
         const otodomData = {{ otodom_counts|tojson }};
         const totalData = {{ total_counts|tojson }};
-        const isAll = "{{ selected_city }}" === "Cała Polska";
 
         const olxCtx = document.getElementById('olxChart').getContext('2d');
         const otodomCtx = document.getElementById('otodomChart').getContext('2d');
@@ -80,7 +79,10 @@
                 }]
             },
             options: {
-                scales: { y: { grid: { display: false } } }
+                scales: {
+                    x: { title: { display: true, text: 'Data' } },
+                    y: { title: { display: true, text: 'Liczba ogłoszeń' }, grid: { display: false } }
+                }
             }
         });
 
@@ -98,7 +100,10 @@
                 }]
             },
             options: {
-                scales: { y: { grid: { display: false } } }
+                scales: {
+                    x: { title: { display: true, text: 'Data' } },
+                    y: { title: { display: true, text: 'Liczba ogłoszeń' }, grid: { display: false } }
+                }
             }
         });
 
@@ -116,7 +121,10 @@
                 }]
             },
             options: {
-                scales: { y: { grid: { display: false } } }
+                scales: {
+                    x: { title: { display: true, text: 'Data' } },
+                    y: { title: { display: true, text: 'Liczba ogłoszeń' }, grid: { display: false } }
+                }
             }
         });
     </script>
