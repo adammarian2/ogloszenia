@@ -88,26 +88,6 @@ def force_scrape():
     except Exception as e:
         return f"Błąd scrape: {e}"
 
-@app.route("/merge-history")
-def merge_history():
-    import shutil
-    try:
-        # Ścieżki
-        source = "historical_clean.csv"
-        destination = "/mnt/data/data.csv"
-        backup = "/mnt/data/data_backup.csv"
-
-        # Kopia zapasowa
-        if os.path.exists(destination):
-            shutil.copyfile(destination, backup)
-
-        # Nadpisanie
-        shutil.copyfile(source, destination)
-
-        return "✅ Plik data.csv został nadpisany danymi z historical_clean.csv. Backup: data_backup.csv"
-    except Exception as e:
-        return f"❌ Błąd podczas kopiowania: {e}"
-
 # Harmonogram scraper-a
 scheduler = BackgroundScheduler()
 scheduler.add_job(scrape.save_data, "cron", hour=6, minute=0)
