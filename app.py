@@ -88,6 +88,15 @@ def force_scrape():
     except Exception as e:
         return f"Błąd scrape: {e}"
 
+@app.route("/restore-original")
+def restore_original():
+    import shutil
+    try:
+        shutil.copyfile("original_data.csv", "/mnt/data/data.csv")
+        return "✅ Przywrócono oryginalny plik data.csv z original_data.csv"
+    except Exception as e:
+        return f"❌ Błąd: {e}"
+
 # Harmonogram scraper-a
 scheduler = BackgroundScheduler()
 scheduler.add_job(scrape.save_data, "cron", hour=6, minute=0)
