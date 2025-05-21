@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file 
 from apscheduler.schedulers.background import BackgroundScheduler
 import pandas as pd
 import os
@@ -93,7 +93,7 @@ def merge_history():
     import shutil
     try:
         # Ścieżki
-        source = "merged_data.csv"
+        source = "historical_clean.csv"
         destination = "/mnt/data/data.csv"
         backup = "/mnt/data/data_backup.csv"
 
@@ -104,7 +104,7 @@ def merge_history():
         # Nadpisanie
         shutil.copyfile(source, destination)
 
-        return "✅ Plik data.csv został nadpisany danymi z merged_data.csv. Backup: data_backup.csv"
+        return "✅ Plik data.csv został nadpisany danymi z historical_clean.csv. Backup: data_backup.csv"
     except Exception as e:
         return f"❌ Błąd podczas kopiowania: {e}"
 
