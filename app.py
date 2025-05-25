@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file 
+from flask import Flask, render_template, request, send_file
 from apscheduler.schedulers.background import BackgroundScheduler
 import pandas as pd
 import os
@@ -14,6 +14,7 @@ CITIES = [
 ]
 
 DATA_PATH = "/mnt/data/data.csv"
+CUTOFF_DATE = datetime(2025, 5, 18)  # tutaj ustawiasz datę od której mają się pokazywać dane
 
 def calculate_stats(df):
     if df.empty:
@@ -48,18 +49,24 @@ def index():
     if not os.path.exists(DATA_PATH):
         return "Brak danych"
 
+    # 1) Wczytanie wszystkich danych
     data = pd.read_csv(DATA_PATH)
+    data["date"] = pd.to_datetime(data["date"])
+
+    # 2) Odfiltrowanie dni przed cutoffem
+    data = data[data["date"] >= CUTOFF_DATE]
+
     stats = None
 
+    # 3) Wybór miasta i obliczenie statystyk tylko dla "Cała Polska"
     if selected_city != "Cała Polska":
         data = data[data["city"] == selected_city]
     else:
         data = data[data["city"] == "Cała Polska"]
         stats = calculate_stats(data)
 
-    data["date"] = pd.to_datetime(data["date"])
+    # 4) Przygotowanie list do wykresu
     data = data.sort_values("date")
-
     dates = data["date"].dt.strftime("%Y-%m-%d").tolist()
     olx_counts = data["olx"].tolist()
     otodom_counts = data["otodom"].tolist()
@@ -88,20 +95,12 @@ def force_scrape():
     except Exception as e:
         return f"Błąd scrape: {e}"
 
-@app.route("/restore-original")
-def restore_original():
-    import shutil
-    try:
-        shutil.copyfile("original_data.csv", "/mnt/data/data.csv")
-        return "✅ Przywrócono oryginalny plik data.csv z original_data.csv"
-    except Exception as e:
-        return f"❌ Błąd: {e}"
-
-# Harmonogram scraper-a
+# Harmonogram codzienny o 6:00
 scheduler = BackgroundScheduler()
 scheduler.add_job(scrape.save_data, "cron", hour=6, minute=0)
 scheduler.start()
 
+# Pierwsze uruchomienie na starcie
 try:
     scrape.save_data()
 except Exception as e:
